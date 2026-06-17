@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'webhook' => [
+        'url' => env('WEBHOOK_URL', 'https://webhook.site/test'),
+    ],
+
 ];
