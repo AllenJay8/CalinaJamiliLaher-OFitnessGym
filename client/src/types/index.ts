@@ -39,6 +39,8 @@ export interface Member {
   registration_date: string;
   membership_plan?: MembershipPlan;
   full_name?: string;
+  membership_price?: number | null;
+  formatted_price?: string | null;
 }
 
 export interface Membership {

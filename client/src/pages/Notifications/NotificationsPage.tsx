@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { Bell, CheckCheck } from 'lucide-react';
 import api from '../../services/api';
 import Button from '../../components/Button/Button';
+import { formatDateTime } from '../../utils/format';
 import { useSetPageTitle } from '../../hooks/useSetPageTitle';
 import type { Notification, PaginatedResponse } from '../../types';
 
@@ -75,7 +76,7 @@ const NotificationsPage = () => {
                     <div>
                       <h4 className="font-semibold text-[#111827]">{n.title}</h4>
                       <p className="mt-1 text-sm text-gray-600">{n.message}</p>
-                      <p className="mt-2 text-xs text-gray-400">{new Date(n.created_at).toLocaleString()}</p>
+                      <p className="mt-2 text-xs text-gray-400">{formatDateTime(n.created_at)}</p>
                     </div>
                     {!n.is_read && (
                       <button onClick={() => markAsRead(n.id)} className="text-xs font-medium text-[#EAB308] hover:underline">

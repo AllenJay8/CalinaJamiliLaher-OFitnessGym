@@ -12,10 +12,10 @@ class MembershipPlanSeeder extends Seeder
     public function run(): void
     {
         $plans = [
-            ['name' => 'Student Daily Pass', 'category' => 'student', 'type' => 'daily', 'price' => 29.00, 'duration_days' => 1],
+            ['name' => 'Student Walk-in', 'category' => 'student', 'type' => 'daily', 'price' => 29.00, 'duration_days' => 1],
             ['name' => 'Student Monthly Membership', 'category' => 'student', 'type' => 'monthly', 'price' => 300.00, 'duration_days' => 30],
             ['name' => 'Student Yearly Membership', 'category' => 'student', 'type' => 'yearly', 'price' => 3000.00, 'duration_days' => 365],
-            ['name' => 'Regular Daily Pass', 'category' => 'regular', 'type' => 'daily', 'price' => 39.00, 'duration_days' => 1],
+            ['name' => 'Regular Walk-in', 'category' => 'regular', 'type' => 'daily', 'price' => 39.00, 'duration_days' => 1],
             ['name' => 'Regular Monthly Membership', 'category' => 'regular', 'type' => 'monthly', 'price' => 400.00, 'duration_days' => 30],
             ['name' => 'Regular Yearly Membership', 'category' => 'regular', 'type' => 'yearly', 'price' => 4000.00, 'duration_days' => 365],
         ];

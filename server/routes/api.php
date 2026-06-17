@@ -25,6 +25,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index']);
 
     Route::apiResource('members', MemberController::class);
+    Route::delete('/members/{member}/photo', [MemberController::class, 'destroyPhoto']);
     Route::post('/memberships/{member}/renew', [MembershipController::class, 'renew']);
     Route::get('/memberships', [MembershipController::class, 'index']);
 

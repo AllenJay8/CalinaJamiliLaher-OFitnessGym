@@ -72,6 +72,14 @@ class MemberController extends Controller
         ]);
 
         $plan = MembershipPlan::findOrFail($validated['membership_plan_id']);
+
+        if (! $this->membershipService->planMatchesCategory($plan, $validated['membership_category'])) {
+            return response()->json([
+                'message' => 'The selected plan does not match the membership category.',
+                'errors' => ['membership_plan_id' => ['The selected plan does not match the membership category.']],
+            ], 422);
+        }
+
         $dates = $this->membershipService->calculateDates($plan);
 
         return DB::transaction(function () use ($request, $validated, $plan, $dates) {
@@ -148,12 +156,39 @@ class MemberController extends Controller
             'middle_name' => 'nullable|string|max:255',
             'last_name' => 'sometimes|string|max:255',
             'gender' => 'sometimes|in:male,female,other',
-            'birth_date' => 'sometimes|date',
+            'birth_date' => 'sometimes|date|before_or_equal:today',
             'contact_number' => 'sometimes|string|max:20',
             'address' => 'nullable|string',
-            'email' => 'nullable|email|max:255',
+            'email' => 'nullable|string|max:255',
+            'membership_category' => 'sometimes|in:student,regular',
+            'membership_plan_id' => 'sometimes|exists:membership_plans,id',
+            'membership_start_date' => 'sometimes|date',
+            'membership_end_date' => 'sometimes|date',
             'profile_picture' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
+
+        if (array_key_exists('email', $validated)) {
+            $email = trim((string) ($validated['email'] ?? ''));
+            $validated['email'] = $email === '' ? null : $email;
+
+            if ($validated['email'] !== null && ! filter_var($validated['email'], FILTER_VALIDATE_EMAIL)) {
+                return response()->json([
+                    'message' => 'The email must be a valid email address.',
+                    'errors' => ['email' => ['The email must be a valid email address.']],
+                ], 422);
+            }
+        }
+
+        $membershipFields = array_intersect_key($validated, array_flip([
+            'membership_category',
+            'membership_plan_id',
+            'membership_start_date',
+            'membership_end_date',
+        ]));
+
+        if (! empty($membershipFields)) {
+            $validated = array_merge($validated, $this->membershipService->normalizeMembershipFields($member, $validated));
+        }
 
         if ($request->hasFile('profile_picture')) {
             if ($member->profile_picture) {
@@ -164,7 +199,17 @@ class MemberController extends Controller
 
         $member->update($validated);
 
-        return response()->json($member->load('membershipPlan'));
+        return response()->json($member->fresh()->load('membershipPlan'));
+    }
+
+    public function destroyPhoto(Member $member): JsonResponse
+    {
+        if ($member->profile_picture) {
+            Storage::disk('public')->delete($member->profile_picture);
+            $member->update(['profile_picture' => null]);
+        }
+
+        return response()->json($member->fresh()->load('membershipPlan'));
     }
 
     public function destroy(Member $member): JsonResponse

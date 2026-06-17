@@ -3,6 +3,7 @@ import { Webhook, CheckCircle, XCircle } from 'lucide-react';
 import api from '../../services/api';
 import DataTable from '../../components/Table/DataTable';
 import Modal from '../../components/Modal/Modal';
+import { formatDateTime } from '../../utils/format';
 import { useSetPageTitle } from '../../hooks/useSetPageTitle';
 import type { WebhookLog, PaginatedResponse } from '../../types';
 
@@ -58,7 +59,7 @@ const WebhooksPage = () => {
             </span>
           )},
           { key: 'status_code', label: 'Status Code', render: (l) => l.status_code ?? '-' },
-          { key: 'created_at', label: 'Timestamp', render: (l) => new Date(l.created_at).toLocaleString() },
+          { key: 'created_at', label: 'Timestamp', render: (l) => formatDateTime(l.created_at) },
         ]}
         data={logs}
         currentPage={page}

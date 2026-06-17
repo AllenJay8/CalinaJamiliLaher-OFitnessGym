@@ -7,6 +7,8 @@ import Button from '../../components/Button/Button';
 import Modal from '../../components/Modal/Modal';
 import FloatingLabelInput from '../../components/Input/FloatingLabelInput';
 import MemberAvatar from '../../components/Member/MemberAvatar';
+import FormPriceCard from '../../components/Member/FormPriceCard';
+import ProfilePictureUpload, { validateProfilePicture } from '../../components/Member/ProfilePictureUpload';
 import { formatCurrency, formatDate, getMemberName, getStatusColor, capitalize } from '../../utils/format';
 import { useSetPageTitle } from '../../hooks/useSetPageTitle';
 import type { Member, MembershipPlan, PaginatedResponse } from '../../types';
@@ -86,8 +88,9 @@ const MembersPage = () => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!['image/jpeg', 'image/jpg', 'image/png'].includes(file.type)) {
-      setFormErrors((prev) => ({ ...prev, profile_picture: 'Only JPG, JPEG, and PNG files are allowed.' }));
+    const validationError = validateProfilePicture(file);
+    if (validationError) {
+      setFormErrors((prev) => ({ ...prev, profile_picture: validationError }));
       return;
     }
     if (photoPreview) URL.revokeObjectURL(photoPreview);
@@ -111,7 +114,7 @@ const MembersPage = () => {
       Object.entries(form).forEach(([k, v]) => {
         if (v !== null && v !== '') fd.append(k, v as string | Blob);
       });
-      await api.post('/members', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+      await api.post('/members', fd);
       setShowAdd(false);
       resetForm();
       fetchMembers();
@@ -208,40 +211,32 @@ const MembersPage = () => {
       />
 
       <Modal isOpen={showAdd} onClose={() => { setShowAdd(false); resetForm(); }} title="Add Member" size="lg">
-        <form onSubmit={handleAdd} className="space-y-4">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <form onSubmit={handleAdd} className="space-y-6">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6">
             <FloatingLabelInput label="First Name" name="first_name" value={form.first_name} onChange={handleChange} error={formErrors.first_name} required />
             <FloatingLabelInput label="Middle Name" name="middle_name" value={form.middle_name} onChange={handleChange} />
             <FloatingLabelInput label="Last Name" name="last_name" value={form.last_name} onChange={handleChange} error={formErrors.last_name} required />
             <FloatingLabelInput label="Gender" name="gender" value={form.gender} onChange={handleChange} as="select" options={[{ value: 'male', label: 'Male' }, { value: 'female', label: 'Female' }, { value: 'other', label: 'Other' }]} required />
-            <FloatingLabelInput label="Birth Date" name="birth_date" type="date" value={form.birth_date} onChange={handleChange} required />
-            <FloatingLabelInput label="Contact Number" name="contact_number" value={form.contact_number} onChange={handleChange} required />
-            <FloatingLabelInput label="Email" name="email" type="email" value={form.email} onChange={handleChange} />
+            <FloatingLabelInput label="Birth Date" name="birth_date" type="date" value={form.birth_date} onChange={handleChange} error={formErrors.birth_date} required />
+            <FloatingLabelInput label="Contact Number" name="contact_number" value={form.contact_number} onChange={handleChange} error={formErrors.contact_number} required />
+            <FloatingLabelInput label="Email" name="email" type="email" value={form.email} onChange={handleChange} error={formErrors.email} />
             <FloatingLabelInput label="Category" name="membership_category" value={form.membership_category} onChange={handleChange} as="select" options={[{ value: 'student', label: 'Student' }, { value: 'regular', label: 'Regular' }]} required />
-            <FloatingLabelInput label="Plan" name="membership_plan_id" value={form.membership_plan_id} onChange={handleChange} as="select" options={filteredPlans.map((p) => ({ value: String(p.id), label: `${p.name} - ${formatCurrency(p.price)}` }))} required />
+            <FloatingLabelInput label="Plan" name="membership_plan_id" value={form.membership_plan_id} onChange={handleChange} as="select" options={filteredPlans.map((p) => ({ value: String(p.id), label: p.name }))} error={formErrors.membership_plan_id} required />
             <FloatingLabelInput label="Payment Method" name="payment_method" value={form.payment_method} onChange={handleChange} as="select" options={[{ value: 'cash', label: 'Cash' }, { value: 'gcash', label: 'GCash' }, { value: 'bank_transfer', label: 'Bank Transfer' }, { value: 'card', label: 'Card' }]} required />
-          </div>
-          <FloatingLabelInput label="Address" name="address" value={form.address} onChange={handleChange} as="textarea" />
-          <div className="rounded-lg border border-dashed border-[#FACC15] bg-[#FACC15]/5 p-4">
-            <label className="mb-2 block text-sm font-medium text-gray-700">Profile Picture (JPG, JPEG, PNG)</label>
-            <div className="flex items-center gap-4">
-              {photoPreview ? (
-                <img src={photoPreview} alt="Preview" className="h-20 w-20 rounded-full object-cover ring-2 ring-[#FACC15]" />
-              ) : (
-                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gray-100 text-xs text-gray-400">No photo</div>
-              )}
-              <input type="file" accept="image/jpeg,image/jpg,image/png" onChange={handleFileChange} className="text-sm" />
+
+            {selectedPlan && (
+              <FormPriceCard price={formatCurrency(selectedPlan.price)} durationDays={selectedPlan.duration_days} />
+            )}
+
+            <ProfilePictureUpload preview={photoPreview} error={formErrors.profile_picture} onChange={handleFileChange} />
+
+            <div className="md:col-span-2">
+              <FloatingLabelInput label="Address" name="address" value={form.address} onChange={handleChange} as="textarea" error={formErrors.address} />
             </div>
-            {formErrors.profile_picture && <p className="mt-1 text-xs text-red-500">{formErrors.profile_picture}</p>}
           </div>
-          {selectedPlan && (
-            <div className="rounded-lg bg-[#FACC15]/10 p-3 text-sm">
-              <p><strong>Price:</strong> {formatCurrency(selectedPlan.price)}</p>
-              <p><strong>Duration:</strong> {selectedPlan.duration_days} days</p>
-            </div>
-          )}
-          <div className="flex justify-end gap-2">
-            <Button variant="secondary" onClick={() => { setShowAdd(false); resetForm(); }}>Cancel</Button>
+
+          <div className="flex flex-col-reverse gap-2 border-t border-gray-100 pt-4 sm:flex-row sm:justify-end">
+            <Button variant="secondary" type="button" onClick={() => { setShowAdd(false); resetForm(); }}>Cancel</Button>
             <Button type="submit" disabled={submitting}>{submitting ? 'Saving...' : 'Add Member'}</Button>
           </div>
         </form>
@@ -256,11 +251,19 @@ const MembersPage = () => {
       </Modal>
 
       <Modal isOpen={!!showRenew} onClose={() => setShowRenew(null)} title="Renew Membership">
-        <form onSubmit={handleRenew} className="space-y-4">
-          <FloatingLabelInput label="Plan" name="membership_plan_id" value={renewForm.membership_plan_id} onChange={(e) => setRenewForm({ ...renewForm, membership_plan_id: e.target.value })} as="select" options={renewPlans.map((p) => ({ value: String(p.id), label: `${p.name} - ${formatCurrency(p.price)}` }))} required />
-          <FloatingLabelInput label="Payment Method" name="payment_method" value={renewForm.payment_method} onChange={(e) => setRenewForm({ ...renewForm, payment_method: e.target.value })} as="select" options={[{ value: 'cash', label: 'Cash' }, { value: 'gcash', label: 'GCash' }, { value: 'bank_transfer', label: 'Bank Transfer' }, { value: 'card', label: 'Card' }]} required />
-          <div className="flex justify-end gap-2">
-            <Button variant="secondary" onClick={() => setShowRenew(null)}>Cancel</Button>
+        <form onSubmit={handleRenew} className="space-y-6">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6">
+            <FloatingLabelInput label="Plan" name="membership_plan_id" value={renewForm.membership_plan_id} onChange={(e) => setRenewForm({ ...renewForm, membership_plan_id: e.target.value })} as="select" options={renewPlans.map((p) => ({ value: String(p.id), label: p.name }))} required />
+            <FloatingLabelInput label="Payment Method" name="payment_method" value={renewForm.payment_method} onChange={(e) => setRenewForm({ ...renewForm, payment_method: e.target.value })} as="select" options={[{ value: 'cash', label: 'Cash' }, { value: 'gcash', label: 'GCash' }, { value: 'bank_transfer', label: 'Bank Transfer' }, { value: 'card', label: 'Card' }]} required />
+            {(() => {
+              const renewPlan = renewPlans.find((p) => p.id === Number(renewForm.membership_plan_id));
+              return renewPlan ? (
+                <FormPriceCard price={formatCurrency(renewPlan.price)} durationDays={renewPlan.duration_days} />
+              ) : null;
+            })()}
+          </div>
+          <div className="flex flex-col-reverse gap-2 border-t border-gray-100 pt-4 sm:flex-row sm:justify-end">
+            <Button variant="secondary" type="button" onClick={() => setShowRenew(null)}>Cancel</Button>
             <Button type="submit" disabled={submitting}>{submitting ? 'Renewing...' : 'Renew'}</Button>
           </div>
         </form>

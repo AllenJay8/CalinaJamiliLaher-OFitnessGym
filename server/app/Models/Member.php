@@ -32,15 +32,15 @@ class Member extends Model
         'registration_date',
     ];
 
-    protected $appends = ['profile_picture_url', 'full_name'];
+    protected $appends = ['profile_picture_url', 'full_name', 'membership_price', 'formatted_price'];
 
     protected function casts(): array
     {
         return [
-            'birth_date' => 'date',
-            'membership_start_date' => 'date',
-            'membership_end_date' => 'date',
-            'registration_date' => 'date',
+            'birth_date' => 'date:Y-m-d',
+            'membership_start_date' => 'date:Y-m-d',
+            'membership_end_date' => 'date:Y-m-d',
+            'registration_date' => 'date:Y-m-d',
         ];
     }
 
@@ -52,6 +52,24 @@ class Member extends Model
             }
 
             return Storage::disk('public')->url($this->profile_picture);
+        });
+    }
+
+    protected function membershipPrice(): Attribute
+    {
+        return Attribute::get(function () {
+            $price = $this->membershipPlan?->price;
+
+            return $price !== null ? (float) $price : null;
+        });
+    }
+
+    protected function formattedPrice(): Attribute
+    {
+        return Attribute::get(function () {
+            $price = $this->membershipPlan?->price;
+
+            return $price !== null ? '₱'.number_format((float) $price, 2) : null;
         });
     }
 

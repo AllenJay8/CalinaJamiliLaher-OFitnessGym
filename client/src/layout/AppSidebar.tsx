@@ -34,7 +34,8 @@ const AppSidebar = () => {
 
   const sidebarItems = isAdmin ? [...staffItems, ...adminItems] : staffItems;
 
-  const isActive = (path: string) => location.pathname.startsWith(path);
+  const isActive = (path: string) =>
+    location.pathname === path || location.pathname.startsWith(`${path}/`);
 
   return (
     <>
@@ -42,16 +43,16 @@ const AppSidebar = () => {
         <button
           type="button"
           aria-label="Close sidebar"
-          className="fixed inset-x-0 top-16 bottom-0 z-30 bg-gray-900/50 sm:hidden"
+          className="fixed inset-x-0 top-16 bottom-12 z-30 bg-gray-900/50 sm:hidden"
           onClick={toggleSidebar}
         />
       )}
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-40 w-64 border-r border-gray-200 bg-white transition-transform duration-200 ease-in-out ${
+        className={`fixed top-0 bottom-12 left-0 z-40 flex w-64 flex-col border-r border-[#EAB308] bg-[#FACC15] transition-transform duration-200 ease-in-out sm:bottom-0 ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         } sm:translate-x-0`}
       >
-        <div className="flex h-16 items-center gap-3 border-b border-gray-200 bg-[#FACC15] px-4">
+        <div className="flex h-16 items-center gap-3 border-b border-[#EAB308] px-4">
           <Dumbbell className="h-8 w-8 text-[#111827]" />
           <div>
             <h1 className="text-sm font-bold text-[#111827]">OFitness Gym</h1>
@@ -59,7 +60,7 @@ const AppSidebar = () => {
           </div>
         </div>
 
-        <div className="flex h-[calc(100%-4rem)] flex-col justify-between overflow-y-auto px-3 py-4">
+        <div className="flex min-h-0 flex-1 flex-col justify-between overflow-y-auto bg-[#FACC15] px-3 py-4">
           <ul className="space-y-1">
             {sidebarItems.map((item) => {
               const Icon = item.icon;
@@ -70,8 +71,8 @@ const AppSidebar = () => {
                     onClick={closeSidebar}
                     className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
                       isActive(item.path)
-                        ? 'bg-[#FACC15] text-[#111827]'
-                        : 'text-gray-600 hover:bg-[#FACC15]/10 hover:text-[#111827]'
+                        ? 'bg-white text-[#111827] shadow-sm'
+                        : 'text-[#111827]/80 hover:bg-white/60 hover:text-[#111827]'
                     }`}
                   >
                     <Icon size={18} />
@@ -82,14 +83,14 @@ const AppSidebar = () => {
             })}
           </ul>
 
-          <div className="border-t border-gray-200 pt-4">
-            <div className="mb-3 rounded-lg bg-gray-50 px-3 py-2">
+          <div className="mt-4 border-t border-[#EAB308] bg-[#FACC15] pt-4">
+            <div className="mb-3 rounded-lg border border-[#EAB308]/40 bg-white/50 px-3 py-2">
               <p className="text-sm font-medium text-[#111827]">{user?.name}</p>
-              <p className="text-xs capitalize text-gray-500">{user?.role}</p>
+              <p className="text-xs capitalize text-[#111827]/70">{user?.role}</p>
             </div>
             <button
               onClick={logout}
-              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50"
+              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-red-700 hover:bg-white/60"
             >
               <LogOut size={18} />
               Logout
